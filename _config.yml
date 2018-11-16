@@ -1,7 +1,7 @@
 # Site configuration
 
 url: "https://rtsofware.github.io/"
-baseurl: "/"
+#baseurl: "/"
 exclude: [CNAME, README.md, .gitignore]
 permalink: /:title ## disables post output
 timezone: null
