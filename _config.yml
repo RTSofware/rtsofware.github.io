@@ -3,6 +3,9 @@
 url: "https://rtsofware.github.io/"
 #baseurl: "/"
 exclude: [CNAME, README.md, .gitignore]
+
+# Surefire, Jacoco reports
+include: ['.resources']
 permalink: /:title ## disables post output
 timezone: null
 lsi: false

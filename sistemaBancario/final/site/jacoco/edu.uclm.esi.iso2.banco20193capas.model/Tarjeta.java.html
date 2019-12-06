@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Tarjeta.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Sistema Bancario</a> &gt; <a href="index.source.html" class="el_package">edu.uclm.esi.iso2.banco20193capas.model</a> &gt; <span class="el_source">Tarjeta.java</span></div><h1>Tarjeta.java</h1><pre class="source lang-java linenums">package edu.uclm.esi.iso2.banco20193capas.model;
+
+import java.security.SecureRandom;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
+
+import edu.uclm.esi.iso2.banco20193capas.exceptions.ImporteInvalidoException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.PinInvalidoException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.SaldoInsuficienteException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.TarjetaBloqueadaException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.TokenInvalidoException;
+
+/**
+ * Representa una tarjeta bancaria, bien de debito o bien de credito. Una
+ * {@code Tarjeta} esta asociada a un {@code Cliente} y a una {@code Cuenta}.
+ */
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class Tarjeta {
+
+	/** The id. */
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	/**
+	 * Id de la Tarjeta.
+	 */
+	private Long id;
+
+	/**
+	 * Pin de la Tarjeta.
+	 */
+	private Integer pin;
+
+	/**
+	 * Booleano que determina si la tarjeta está activa o no.
+	 */
+	private Boolean activa;
+
+	/**
+	 * Numero de intentos.
+	 */
+	private Integer intentos;
+
+	/**
+	 * Compra.
+	 */
+	@Transient
+	private Compra compra;
+
+	/**
+	 * Titular de la tarjeta.
+	 */
+	@ManyToOne
+	private Cliente titular;
+
+	/**
+	 * Cuenta a la que pertenece la tarjeta.
+	 */
+	@ManyToOne
+	private Cuenta cuenta;
+
+	/**
+	 * Crea una tarjeta.
+	 */
+<span class="fc" id="L72">	public Tarjeta() {</span>
+<span class="fc" id="L73">		final int maxDigitosPin = 3;</span>
+<span class="fc" id="L74">		final int decimalNumber = 10;</span>
+<span class="fc" id="L75">		activa = true;</span>
+<span class="fc" id="L76">		this.intentos = 0;</span>
+<span class="fc" id="L77">		final SecureRandom dado = new SecureRandom();</span>
+<span class="fc" id="L78">		pin = 0;</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">		for (int i = 0; i &lt;= maxDigitosPin; i++) {</span>
+<span class="fc" id="L80">			pin = (int) (pin + dado.nextInt(decimalNumber)</span>
+<span class="fc" id="L81">			* Math.pow(decimalNumber, i));</span>
+		}
+<span class="fc" id="L83">	}</span>
+
+	/**
+	 * Comprueba el pin.
+	 *
+	 * @param pinEntrada pin de entrada
+	 * @throws TarjetaBloqueadaException si no esta activa
+	 * @throws PinInvalidoException      si el pin es incorrecto
+	 */
+	protected void comprobar(final int pinEntrada)
+			throws
+			TarjetaBloqueadaException,
+			PinInvalidoException {
+<span class="fc" id="L96">		final int maxIntentos = 3;</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">		if (!this.isActiva()) {</span>
+<span class="fc" id="L98">			throw new TarjetaBloqueadaException();</span>
+		}
+<span class="fc bfc" id="L100" title="All 2 branches covered.">		if (this.pin != pinEntrada) {</span>
+<span class="fc" id="L101">			this.intentos++;</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">			if (intentos == maxIntentos) {</span>
+<span class="fc" id="L103">				bloquear();</span>
+			}
+<span class="fc" id="L105">			throw new PinInvalidoException();</span>
+		}
+<span class="fc" id="L107">	}</span>
+
+	/**
+	 * Permite confirmar una compra que se ha iniciado por Internet.
+	 * El metodo {@link #comprarPorInternet(int, double)}
+	 * devuelve un token que debe ser introducido en este metodo.
+	 * @param tokenEntrada El token que introduce el usuario. Para que la
+	 * compra confirme, ha de coincidir con el token devuelto por
+	 * {@link #comprarPorInternet(int, double)}
+	 * @throws TokenInvalidoException     Si el {@code token} introducido es
+	 *                                    distinto del recibido
+	 * @throws ImporteInvalidoException   Si el importe{@literal &lt;}=0
+	 * @throws SaldoInsuficienteException Si el saldo de la cuenta asociada
+	 *                                    a la tarjeta (en el caso de
+	 * {@link TarjetaDebito}) es menor que el importe, o si el credito
+	 * disponible en la tarjeta de es menor que el importe
+	 * @throws TarjetaBloqueadaException  Si la tarjeta esta bloqueada
+	 * @throws PinInvalidoException       Si el pin que se introdujo
+	 * es invalido
+	 */
+	public void confirmarCompraPorInternet(final int tokenEntrada)
+			throws
+			TokenInvalidoException,
+			ImporteInvalidoException,
+			SaldoInsuficienteException,
+			TarjetaBloqueadaException,
+			PinInvalidoException {
+<span class="fc bfc" id="L134" title="All 2 branches covered.">		if (tokenEntrada != this.compra.getToken()) {</span>
+<span class="fc" id="L135">			this.compra = new Compra();</span>
+<span class="fc" id="L136">			throw new TokenInvalidoException();</span>
+		}
+<span class="fc" id="L138">		this.comprar(this.pin, this.compra.getImporte());</span>
+<span class="fc" id="L139">	}</span>
+
+	/**
+	 * Bloquear.
+	 */
+	protected abstract void bloquear();
+
+	/**
+	 * Getter de id.
+	 * @return id ID de la tarjeta
+	 */
+	public Long getId() {
+<span class="fc" id="L151">		return id;</span>
+	}
+
+	/**
+	 * Setter de id.
+	 * @param identificador id de la tarjeta
+	 */
+	public void setId(final Long identificador) {
+<span class="nc" id="L159">		this.id = identificador;</span>
+<span class="nc" id="L160">	}</span>
+
+	/**
+	 * Geter de pin.
+	 * @return pin de la tarjeta
+	 */
+	public Integer getPin() {
+<span class="fc" id="L167">		return pin;</span>
+	}
+
+	/**
+	 * Setter de pin.
+	 * @param pinTj pin de la Tarjeta
+	 */
+	public void setPin(final Integer pinTj) {
+<span class="fc" id="L175">		this.pin = pinTj;</span>
+<span class="fc" id="L176">	}</span>
+
+	/**
+	 * Getter de titular.
+	 * @return titular de la tarjeta
+	 */
+	public Cliente getTitular() {
+<span class="nc" id="L183">		return titular;</span>
+	}
+
+	/**
+	 * Setter de titular.
+	 * @param titularTj titular de la tarjeta
+	 */
+	public void setTitular(final Cliente titularTj) {
+<span class="fc" id="L191">		this.titular = titularTj;</span>
+<span class="fc" id="L192">	}</span>
+
+	/**
+	 * Getter de cuenta.
+	 * @return cuenta de la tarjeta
+	 */
+	public Cuenta getCuenta() {
+<span class="fc" id="L199">		return cuenta;</span>
+	}
+
+	/**
+	 * Setter de cuenta.
+	 * @param cuentaTj cuenta de la tarjeta
+	 */
+	public void setCuenta(final Cuenta cuentaTj) {
+<span class="fc" id="L207">		this.cuenta = cuentaTj;</span>
+<span class="fc" id="L208">	}</span>
+
+	/**
+	 * Valor de activa.
+	 * @return true si la tarjeta está activa; false si está bloqueada
+	 */
+	public Boolean isActiva() {
+<span class="fc" id="L215">		return activa;</span>
+	}
+
+	/**
+	 * Setter de activa.
+	 * @param boolActiva booleano activa
+	 */
+	public void setActiva(final Boolean boolActiva) {
+<span class="fc" id="L223">		this.activa = boolActiva;</span>
+<span class="fc" id="L224">	}</span>
+
+	/**
+	 * Sacar dinero.
+	 *
+	 * @param pinTarjeta the pin
+	 * @param importe the importe
+	 * @throws ImporteInvalidoException the importe invalido exception
+	 * @throws SaldoInsuficienteException the saldo insuficiente exception
+	 * @throws TarjetaBloqueadaException the tarjeta bloqueada exception
+	 * @throws PinInvalidoException the pin invalido exception
+	 */
+	public abstract void sacarDinero(int pinTarjeta, double importe)
+			throws
+			ImporteInvalidoException,
+			SaldoInsuficienteException,
+			TarjetaBloqueadaException,
+			PinInvalidoException;
+
+	/**
+	 * Comprar por internet.
+	 *
+	 * @param pinTarjeta the pin
+	 * @param importe the importe
+	 * @return the integer
+	 * @throws TarjetaBloqueadaException the tarjeta bloqueada exception
+	 * @throws PinInvalidoException the pin invalido exception
+	 * @throws SaldoInsuficienteException the saldo insuficiente exception
+	 * @throws ImporteInvalidoException the importe invalido exception
+	 */
+	public abstract Integer comprarPorInternet(
+			int pinTarjeta,
+			double importe)
+			throws
+			TarjetaBloqueadaException,
+			PinInvalidoException,
+			SaldoInsuficienteException,
+			ImporteInvalidoException;
+
+	/**
+	 * Comprar.
+	 *
+	 * @param pinTarjeta the pin
+	 * @param importe the importe
+	 * @throws ImporteInvalidoException the importe invalido exception
+	 * @throws SaldoInsuficienteException the saldo insuficiente exception
+	 * @throws TarjetaBloqueadaException the tarjeta bloqueada exception
+	 * @throws PinInvalidoException the pin invalido exception
+	 */
+	public abstract void comprar(int pinTarjeta, double importe)
+			throws
+			ImporteInvalidoException,
+			SaldoInsuficienteException,
+			TarjetaBloqueadaException,
+			PinInvalidoException;
+
+	/**
+	 * Permite cambiar el pin de la tarjeta.
+	 * @param pinViejo El pin actual
+	 * @param pinNuevo El pin nuevo (el que desea establecer el usuario)
+	 * @throws PinInvalidoException Si el {@code pinViejo} es incorrecto
+	 */
+	public abstract void cambiarPin(int pinViejo, int pinNuevo)
+			throws PinInvalidoException;
+
+	/**
+	 * Gets the intentos.
+	 * @return the intentos
+	 */
+	public Integer getIntentos() {
+<span class="nc" id="L294">		return intentos;</span>
+	}
+
+	/**
+	 * Sets the intentos.
+	 * @param intentosParametro the new intentos
+	 */
+	public void setIntentos(final Integer intentosParametro) {
+<span class="fc" id="L302">		this.intentos = intentosParametro;</span>
+<span class="fc" id="L303">	}</span>
+
+	/**
+	 * Gets the compra.
+	 * @return the compra
+	 */
+	public Compra getCompra() {
+<span class="nc" id="L310">		return compra;</span>
+	}
+
+	/**
+	 * Sets the compra.
+	 * @param compraParametro the new compra
+	 */
+	public void setCompra(final Compra compraParametro) {
+<span class="fc" id="L318">		this.compra = compraParametro;</span>
+<span class="fc" id="L319">	}</span>
+
+	/**
+	 * Gets the activa.
+	 * @return the activa
+	 */
+	public Boolean getActiva() {
+<span class="nc" id="L326">		return activa;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

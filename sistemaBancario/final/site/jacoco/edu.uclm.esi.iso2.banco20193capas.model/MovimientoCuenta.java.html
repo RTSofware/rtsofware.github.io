@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MovimientoCuenta.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Sistema Bancario</a> &gt; <a href="index.source.html" class="el_package">edu.uclm.esi.iso2.banco20193capas.model</a> &gt; <span class="el_source">MovimientoCuenta.java</span></div><h1>MovimientoCuenta.java</h1><pre class="source lang-java linenums">package edu.uclm.esi.iso2.banco20193capas.model;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+
+/**
+ * Representa un movimiento en una cuenta bancaria.
+ */
+@Entity
+public class MovimientoCuenta {
+	/**
+	 * Id del movimiento.
+	 */
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+
+	/**
+	 * Cuenta del movimiento.
+	 */
+	@ManyToOne
+	private Cuenta cuenta;
+
+	/**
+	 * Importe del movimiento.
+	 */
+	private double importe;
+
+	/**
+	 * Concepto del movimiento.
+	 */
+	private String concepto;
+
+	/**
+	 * Crea un movimiento.
+	 */
+<span class="fc" id="L40">	public MovimientoCuenta() {</span>
+		// Crea un movimiento
+<span class="fc" id="L42">	}</span>
+
+	/**
+	 * Crea un movimiento.
+	 * @param cuentaM Cuenta del movimiento
+	 * @param importeM  Importe del movimiento
+	 * @param conceptoM Concepto del movimiento
+	 */
+	public MovimientoCuenta(
+			final Cuenta cuentaM,
+			final double importeM,
+<span class="fc" id="L53">			final String conceptoM) {</span>
+<span class="fc" id="L54">		this.importe = importeM;</span>
+<span class="fc" id="L55">		this.concepto = conceptoM;</span>
+<span class="fc" id="L56">		this.cuenta = cuentaM;</span>
+<span class="fc" id="L57">	}</span>
+
+	/**
+	 * Getter del Id.
+	 * @return id ID del Movimiento
+	 */
+	public Long getId() {
+<span class="fc" id="L64">		return id;</span>
+	}
+
+	/**
+	 * Setter del Id.
+	 * @param identificador Id del Movimiento
+	 */
+	public void setId(final Long identificador) {
+<span class="nc" id="L72">		this.id = identificador;</span>
+<span class="nc" id="L73">	}</span>
+
+	/**
+	 * Getter de la cuenta.
+	 * @return cuenta del Movimiento
+	 */
+	public Cuenta getCuenta() {
+<span class="nc" id="L80">		return cuenta;</span>
+	}
+
+	/**
+	 * Setter de la cuenta.
+	 * @param cuentaMovi del movimiento
+	 */
+	public void setCuenta(final Cuenta cuentaMovi) {
+<span class="nc" id="L88">		this.cuenta = cuentaMovi;</span>
+<span class="nc" id="L89">	}</span>
+
+	/**
+	 * Getter del Importe.
+	 * @return Importe del Movimiento
+	 */
+	public double getImporte() {
+<span class="fc" id="L96">		return importe;</span>
+	}
+
+	/**
+	 * Setter del Importe.
+	 * @param importeMovi Importe del Movimiento
+	 */
+	public void setImporte(final double importeMovi) {
+<span class="nc" id="L104">		this.importe = importeMovi;</span>
+<span class="nc" id="L105">	}</span>
+
+	/**
+	 * Getter del Concepto.
+	 * @return Concepto del Movimiento
+	 */
+	public String getConcepto() {
+<span class="nc" id="L112">		return concepto;</span>
+	}
+
+	/**
+	 * Setter del Concepto.
+	 * @param conceptoMovi Concepto del Movimiento
+	 */
+	public void setConcepto(final String conceptoMovi) {
+<span class="nc" id="L120">		this.concepto = conceptoMovi;</span>
+<span class="nc" id="L121">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

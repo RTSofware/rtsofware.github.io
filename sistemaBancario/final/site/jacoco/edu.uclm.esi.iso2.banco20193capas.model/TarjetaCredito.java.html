@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TarjetaCredito.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Sistema Bancario</a> &gt; <a href="index.source.html" class="el_package">edu.uclm.esi.iso2.banco20193capas.model</a> &gt; <span class="el_source">TarjetaCredito.java</span></div><h1>TarjetaCredito.java</h1><pre class="source lang-java linenums">package edu.uclm.esi.iso2.banco20193capas.model;
+
+import java.security.SecureRandom;
+import java.util.List;
+
+import javax.persistence.Entity;
+
+import edu.uclm.esi.iso2.banco20193capas.exceptions.ImporteInvalidoException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.PinInvalidoException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.SaldoInsuficienteException;
+import edu.uclm.esi.iso2.banco20193capas.exceptions.TarjetaBloqueadaException;
+
+/**
+ * Tarjeta de credito.
+ */
+@Entity
+public class TarjetaCredito extends Tarjeta {
+	/**
+	 * Credito.
+	 */
+	private Double credito;
+
+	/**
+	 * Crea una tarjeta de credito.
+	 */
+	public TarjetaCredito() {
+<span class="fc" id="L27">		super();</span>
+<span class="fc" id="L28">	}</span>
+
+	/**
+	 * Permite sacar dinero del cajero automatico.
+	 * @param pin     El pin que introduce el usuario
+	 * @param importe El {@code importe} que desea sacar
+	 * @throws ImporteInvalidoException   Si el {@code importe&lt;=0}
+	 * @throws SaldoInsuficienteException Si el credito disponible de la
+	 * tarjeta es menor que el importe
+	 * @throws TarjetaBloqueadaException  Si la tarjeta esta bloqueada
+	 * @throws PinInvalidoException       Si el pin introducido es distinto
+	 * del de la tarjeta
+	 */
+	@Override
+	public void sacarDinero(final int pin, final double importe)
+			throws
+			ImporteInvalidoException,
+			SaldoInsuficienteException,
+			TarjetaBloqueadaException,
+			PinInvalidoException {
+
+<span class="fc" id="L49">		final double minimaComision = 3;</span>
+
+<span class="fc" id="L51">		comprobar(pin);</span>
+<span class="fc" id="L52">		this.setIntentos(0);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">		if (importe &gt; getCreditoDisponible()) {</span>
+<span class="fc" id="L54">			throw new SaldoInsuficienteException();</span>
+		}
+<span class="fc bfc" id="L56" title="All 2 branches covered.">		if (importe &lt;= 0) {</span>
+<span class="fc" id="L57">			throw new ImporteInvalidoException(importe);</span>
+		}
+<span class="fc" id="L59">		MovimientoTarjetaCredito principal =</span>
+				new MovimientoTarjetaCredito(this,
+						importe,
+						&quot;Retirada de efectivo&quot;);
+<span class="fc" id="L63">		MovimientoTarjetaCredito mComision =</span>
+				new MovimientoTarjetaCredito(this,
+						minimaComision,
+				&quot;Comision por retirada de efectivo&quot;);
+<span class="fc" id="L67">		ManagerHelper.getMovimientoTarjetaCreditoDAO().</span>
+<span class="fc" id="L68">		save(principal);</span>
+<span class="fc" id="L69">		ManagerHelper.getMovimientoTarjetaCreditoDAO().</span>
+<span class="fc" id="L70">		save(mComision);</span>
+<span class="fc" id="L71">	}</span>
+
+	/**
+	 * Inicia una compra por Internet, que debe confirmarse despues (ver
+	 * {@link #confirmarCompraPorInternet(int)}) mediante el token que
+	 * devuelve este metodo.
+	 * @param pin     El pin que introduce el usuario
+	 * @param importe El importe de la compra
+	 * @return Un token que debe introducirse en
+	 *         {@link #confirmarCompraPorInternet(int)}
+	 * @throws TarjetaBloqueadaException  Si la tarjeta esta bloqueada
+	 * @throws PinInvalidoException       Si el pin introducido es distinto
+	 * del de la tarjeta
+	 * @throws SaldoInsuficienteException Si el credito disponible de la
+	 * tarjeta es menor que el importe
+	 * @throws ImporteInvalidoException   Si el importe{@literal &lt;}=0
+	 */
+	@Override
+	public Integer comprarPorInternet(final int pin, final double importe)
+			throws
+			TarjetaBloqueadaException,
+			PinInvalidoException,
+			SaldoInsuficienteException,
+			ImporteInvalidoException {
+
+<span class="fc" id="L96">		final int maxDigitosPin = 3;</span>
+<span class="fc" id="L97">		final int decimalNumber = 10;</span>
+<span class="fc" id="L98">		final int defaultToken = 1234;</span>
+<span class="fc" id="L99">		SecureRandom dado = new SecureRandom();</span>
+<span class="fc" id="L100">		int token = 0;</span>
+
+<span class="fc" id="L102">		comprobar(pin);</span>
+<span class="fc" id="L103">		this.setIntentos(0);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">		if (importe &gt; getCreditoDisponible()) {</span>
+<span class="fc" id="L105">			throw new SaldoInsuficienteException();</span>
+		}
+
+<span class="fc bfc" id="L108" title="All 2 branches covered.">		if (importe &lt;= 0) {</span>
+<span class="fc" id="L109">			throw new ImporteInvalidoException(importe);</span>
+		}
+
+<span class="fc bfc" id="L112" title="All 2 branches covered.">		for (int i = 0; i &lt;= maxDigitosPin; i++) {</span>
+<span class="fc" id="L113">			token = (int) (token + dado.nextInt(decimalNumber)</span>
+<span class="fc" id="L114">			* Math.pow(decimalNumber, i));</span>
+		}
+<span class="fc" id="L116">		token = defaultToken;</span>
+<span class="fc" id="L117">		this.setCompra(new Compra(importe, token));</span>
+<span class="fc" id="L118">		return token;</span>
+	}
+
+	/**
+	 * Permite hacer un compra en un comercio.
+	 * @param pin     El pin que introduce el usuario
+	 * @param importe El importe de la compra
+	 * @throws ImporteInvalidoException   Si el importe{@literal &lt;}=0
+	 * @throws SaldoInsuficienteException Si el credito disponible
+	 *                                    ({@link #getCreditoDisponible()})
+	 *                                    de la tarjeta es menor que
+	 *                                    el importe
+	 * @throws TarjetaBloqueadaException  Si la tarjeta esta bloqueada
+	 * @throws PinInvalidoException       Si el pin introducido es
+	 * incorrecto
+	 */
+	@Override
+	public void comprar(final int pin, final double importe)
+			throws
+			ImporteInvalidoException,
+			SaldoInsuficienteException,
+			TarjetaBloqueadaException,
+			PinInvalidoException {
+
+<span class="fc" id="L142">		comprobar(pin);</span>
+<span class="fc" id="L143">		this.setIntentos(0);</span>
+
+<span class="fc bfc" id="L145" title="All 2 branches covered.">		if (importe &gt; getCreditoDisponible()) {</span>
+<span class="fc" id="L146">			throw new SaldoInsuficienteException();</span>
+		}
+<span class="fc bfc" id="L148" title="All 2 branches covered.">		if (importe &lt;= 0) {</span>
+<span class="fc" id="L149">			throw new ImporteInvalidoException(importe);</span>
+		}
+<span class="fc" id="L151">		final MovimientoTarjetaCredito principal =</span>
+				new MovimientoTarjetaCredito(this,
+						importe,
+						&quot;Retirada de efectivo&quot;);
+<span class="fc" id="L155">		ManagerHelper.getMovimientoTarjetaCreditoDAO().</span>
+<span class="fc" id="L156">		save(principal);</span>
+<span class="fc" id="L157">	}</span>
+
+	/**
+	 * Bloquear.
+	 */
+	@Override
+	protected void bloquear() {
+<span class="fc" id="L164">		this.setActiva(false);</span>
+<span class="fc" id="L165">		ManagerHelper.getTarjetaCreditoDAO().save(this);</span>
+<span class="fc" id="L166">	}</span>
+
+	/**
+	 * Liquida la tarjeta.
+	 */
+	public void liquidar() {
+<span class="fc" id="L172">		double gastos = 0.0;</span>
+		List&lt;MovimientoTarjetaCredito&gt; mm =
+<span class="fc" id="L174">				ManagerHelper.getMovimientoTarjetaCreditoDAO().</span>
+<span class="fc" id="L175">				findByTarjetaId(this.getId());</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">		for (MovimientoTarjetaCredito m : mm) {</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">			if (!m.isLiquidado()) {</span>
+<span class="fc" id="L178">				gastos = gastos + m.getImporte();</span>
+<span class="fc" id="L179">				m.setLiquidado(true);</span>
+<span class="fc" id="L180">				ManagerHelper.getMovimientoTarjetaCreditoDAO().</span>
+<span class="fc" id="L181">				save(m);</span>
+			}
+<span class="fc" id="L183">		}</span>
+<span class="fc" id="L184">		this.getCuenta().retiroForzoso(gastos,</span>
+				&quot;Liquidacion de tarjeta de credito&quot;);
+<span class="fc" id="L186">	}</span>
+
+	/**
+	 * Getter de Credito de la tarjeta.
+	 * @return Credito de la tarjeta
+	 */
+	public Double getCredito() {
+<span class="nc" id="L193">		return credito;</span>
+	}
+
+	/**
+	 * Getter de Credito disponible de la tarjeta.
+	 * @return Credito disponible de la tarjeta
+	 */
+	public Double getCreditoDisponible() {
+<span class="fc" id="L201">		double gastos = 0.0;</span>
+		List&lt;MovimientoTarjetaCredito&gt; mm =
+<span class="fc" id="L203">				ManagerHelper.getMovimientoTarjetaCreditoDAO().</span>
+<span class="fc" id="L204">				findByTarjetaId(this.getId());</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">		for (MovimientoTarjetaCredito m : mm) {</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">			if (!m.isLiquidado()) {</span>
+<span class="fc" id="L207">				gastos = gastos + m.getImporte();</span>
+			}
+<span class="fc" id="L209">		}</span>
+
+<span class="fc" id="L211">		return credito - gastos;</span>
+	}
+
+	/**
+	 * Setter del credito de la tarjeta.
+	 * @param creditoTj credito de la tarjeta
+	 */
+	public void setCredito(final Double creditoTj) {
+<span class="fc" id="L219">		this.credito = creditoTj;</span>
+<span class="fc" id="L220">	}</span>
+
+	/**
+	 * Cambiar pin.
+	 * @param pinViejo the pin viejo
+	 * @param pinNuevo the pin nuevo
+	 * @throws PinInvalidoException the pin invalido exception
+	 */
+	@Override
+	public void cambiarPin(final int pinViejo, final int pinNuevo)
+			throws PinInvalidoException {
+<span class="fc bfc" id="L231" title="All 2 branches covered.">		if (this.getPin() != pinViejo) {</span>
+<span class="fc" id="L232">			throw new PinInvalidoException();</span>
+		}
+<span class="fc" id="L234">		this.setPin(pinNuevo);</span>
+<span class="fc" id="L235">		ManagerHelper.getTarjetaCreditoDAO().save(this);</span>
+<span class="fc" id="L236">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>
