@@ -6,10 +6,7 @@ fa-icon: cogs
 ---
 
 # **Modelo de Procesos**
----
 
-# **Metodología de Desarrollo**
----
+## [Mapa de Procesos](https://github.com/RTSofware/EasyCar/wiki/procesos)
 
-# **Modelo de Ciclo de Vida**
 

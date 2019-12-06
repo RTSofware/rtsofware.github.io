@@ -5,10 +5,16 @@ color: white
 fa-icon: code
 ---
 
-# **EasyFood**
+# **EasyHotel**
 
-## Repositorio
+## [Repositorio](https://github.com/RTSofware/EasyHotel])
 
-## Wiki
+## [Wiki](https://github.com/RTSofware/EasyCar/wiki/EasyHotel)
+
+# **EasyCar**
+
+## [Repositorio](https://github.com/RTSofware/EasyCar)
+
+## [Wiki]([https://github.com/RTSofware/EasyCar/wiki)
 
 
